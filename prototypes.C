@@ -48,7 +48,7 @@ double calc_deltaT(double CFL, double deltaX, double aMax){
 }
 
 /* FORCE */
-double calc_microLF(double q, double qNext, double fq, double fqNext
+double calc_microLF(double q, double qNext, double fq, double fqNext,
 		    double deltaX, double deltaT){	
 	double halfDelta = 0.5 * (deltaX/deltaT);
 	(0.5 * (fq + fqNext)) +(halfDelta*(q - qNext));
@@ -57,9 +57,9 @@ double calc_microLF(double q, double qNext, double fq, double fqNext
 double FORCE_LF(std::array<double,3> q, std::array<double,3> qNext,
 		std::array<double,3> fq, std::array<double,3>fqNext,
 		std::array<double,3> & F_lf){
-	F_lf[0] = calc_microLF(q[0], qNext[0], fq[0], fqNext[0]);
-	F_lf[1] = calc_microLF(q[1], qNext[1], fq[1], fqNext[1]);
-	F_lf[2] = calc_microLF(q[2], qNext[2], fq[2], fqNext[2]);
+	F_lf[0] = calc_microLF(q[0], qNext[0], fq[0], fqNext[0], 1, 1);
+	F_lf[1] = calc_microLF(q[1], qNext[1], fq[1], fqNext[1], 1, 1);
+	F_lf[2] = calc_microLF(q[2], qNext[2], fq[2], fqNext[2], 1, 1);
 }
 
 /* fun declaration */
