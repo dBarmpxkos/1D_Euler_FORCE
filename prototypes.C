@@ -47,7 +47,18 @@ double calc_deltaT(double CFL, double deltaX, double aMax){
 	return (CFL*deltaX)/aMax;
 }
 
-/* FORCE */
+/* FORCE Solver
+ *
+ *	 FORCE	 1    LF    n   n       RI    n   n 
+ *	f     =	 - [ f    (q , q   ) + f    (q , q  ) ] 
+ *	i+1/2 	 2   i+1/2  i   i+1     i+1/2 i   i+1
+ * 
+ * calculate Lax-Friedrihcs
+ *     
+ *	LF     n   n      1     n       n      1  Dx   n    n
+ *     f     (q , q  ) =  - [f(q ) + f(q  )] + -  -- (q  - q    )
+ *      i+1/2  i   i+1    2     i       i+1    2  Dt   i    i+1
+ * */ 
 double calc_microLF(double q, double qNext, double fq, double fqNext,
 		    double deltaX, double deltaT){	
 	double halfDelta = 0.5 * (deltaX/deltaT);
@@ -62,11 +73,17 @@ double FORCE_LF(std::array<double,3> q, std::array<double,3> qNext,
 	F_lf[2] = calc_microLF(q[2], qNext[2], fq[2], fqNext[2], 1, 1);
 }
 
+/* calculate Richtmyer */
+double calc_microR
+
+
 /* fun declaration */
 
 int main(void){
 	
-	calc_alpha(10, calc_Cs(1.4, 0.1, 0.2));
+
+
 	return 1;
 }
+
 
