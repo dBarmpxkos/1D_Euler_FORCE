@@ -35,7 +35,8 @@ std::array<double, 3> conservative(std::array<double, 3>& w_i)
 }
 
 // Fill the conservative state vector with the initial data
-void initialiseData(std::vector<std::array<double, 3> >& q, int test, double finalT)
+void initialiseData(std::vector<std::array<double, 3> >& q, 
+					int test, double finalT)
 {
   int n = q.size();
 
@@ -46,11 +47,10 @@ void initialiseData(std::vector<std::array<double, 3> >& q, int test, double fin
       std::array<double, 3> w;
       if(i < n/2)
       {
-	w = {1.0,0.0,1.0};
+		w = {1.0,0.0,1.0};
       }
-      else
-      {
-	w = {0.125,0.0,0.1};
+      else {
+		w = {0.125,0.0,0.1};
       }
       
       std::array<double, 3> q_i = conservative(w);
@@ -86,46 +86,79 @@ void initialiseData(std::vector<std::array<double, 3> >& q, int test, double fin
   }
 }
 // Compute flux-vector corresponding to given state vector
-std::array<double, 3> flux()// TODO = put some variables in the function call
+std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
 {
   std::array<double, 3> f;
+	/* E: energy, t: time */
+	double E, t, pt, rt, ut;
+	/* Cell number */
+    int n = fq.size();   
 
-  // TODO
-  // Compute the flux
-  
+    for (int i = 0; i < n; i++) {
+    	if (i < n/2) {
+    		t = T-1;
+    	}
+    	else {
+    		t = T+4;
+    	}
+
+    	pt = constants::p[t];
+    	rt = constants::r[t];
+    	ut = constants::u[t];
+    	/* Compute E */
+    	E = pt/constants::gamma + ((1/2)*rt*pow(ut, 2)); 
+
+    	fq.at(i)[0] = rt * ut;
+    	fq.at(i)[1] = (rt * pow(ut,2)) + pt;
+    	fq.at(i)[2] = (E + pt)*ut;
+//		std::cout << fq.at(i)[0] << "\t" << fq.at(i)[1] << "\t" << fq.at(i)[2] << "\n";
+ 
   return f;
 }
 
 // Compute the maximum stable time-step for the given data
-double computeTimestep(std::vector<std::array<double, 3> >& q, double dx)
-{
+double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
+
   double dt;
+  double alphaOld, alphaMax;
   int n = q.size();
+  std::array<double, n> Cs;
+
+  // Compute the maximum wavespeed over the entire domain, and use this to compute the timestep
   for(int i=0 ; i < n ; i++)
   {
-    // TODO
-    // Compute the maximum wavespeed over the entire domain, and use this to compute the timestep
+  	/* q[i][0] and q[i][1] are wrong, i need to find
+  	 *  expression for p/rho from q values */
+  	Cs[i] = sqrt( gamma * (q[i][0]/q[i][1]) );
+  	alphaOld = abs(q[2][i]) + Cs[i];
+  	if (alphaOld > alphaMax) 
+  		alphaOld = alphaMax;
   }
+  dt = (CFL*dx)/alphaMax;
+
   return dt;
 }
 
 // Compute the FORCE flux between two states uL and uR in coordinate direction coord.
-std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, double dx, double dt)
-{
+std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, 
+								std::array<double, 3>& q_i, 
+								double dx, double dt){
 
-  std::array<double, 3> fluxRM;
-  // TODO
-  // Compute the Richtmyer flux using q_i and q_iMinus1
+	double halfDelta = 0.5 * (dx/dt);
+	std::array<double, 3> fluxRM;
+	/* Compute the Richtmyer flux using q_i and q_iMinus1 
+	   how the f*** only with q's, don't we need fluxes as well? */
+	fluxRM = ???
 
-  std::array<double, 3> fluxLF;
-  // TODO
-  // Compute the Lax-Friedrichs flux using q_i and q_iMinus1
-  
-  std::array<double, 3> fluxForce;
-  // TODO
-  // Compute the FORCE flux
-  
-  return fluxForce;
+	std::array<double, 3> fluxLF;
+	/* Compute the Lax-Friedrichs flux using q_i and q_iMinus1
+	   how the f*** only with q's, don't we need fluxes as well? */
+
+	std::array<double, 3> fluxForce;
+	// TODO
+	// Compute the FORCE flux
+
+	return fluxForce;
 }
 
 // Compute the array of fluxes from the given data array
