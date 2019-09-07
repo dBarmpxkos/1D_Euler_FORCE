@@ -30,16 +30,16 @@ std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
 }
 
 // Convert primitive state vector to conservative state vector
-std::array<double, 3> conservative(std::array<double, 3>& w_i)
+std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 {
   std::array<double, 3> q_i;
 
   // Convert the primitive variables w_i to the conserved variables q_i
   // w_i = (r, u, p) and q_i = (r, r * u, E) - from slides 11 and 18
 
-  q_i[0] = w_i[0];                     // density
-  q_i[1] = w_i[0] * w_i[1];            // momentum
-  q_i[2] = E(w_i[0], w_i[1], w_i[2]);  // energy
+  q_i[0] = w_i[0];                                 // density
+  q_i[1] = w_i[0] * w_i[1];                        // momentum
+  q_i[2] = calc_E(w_i[0], w_i[1], w_i[2], gamma);  // energy
 
   return q_i;
 }
