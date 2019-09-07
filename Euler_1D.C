@@ -237,20 +237,21 @@ int main(void)
   // Output
 
   std::ofstream rhoOutput("density.dat");
-  std::ofstream velOutput("density.dat");
-  std::ofstream preOutput("density.dat"); 
+  std::ofstream velOutput("velocity.dat");
+  std::ofstream preOutput("pressure.dat"); 
 
-  for(unsigned int i=1 ; i < cells + 1 ; i++)
-  {
-    double x;
-    // TODO
-    // Compute the value of x associated with cell i
-    
+  // TODO Should i start from i=1? It's what framework originally contained:
+  //for(unsigned int i=1 ; i < cells + 1 ; i++)
+
+  for(unsigned int i=0 ; i < cells; i++) {
+
+    double x = (double(i) + 0.5) * dx;
     std::array<double, 3> w = primitive(q[i]);
     
     rhoOutput << x << " " << w[0] << std::endl;
     velOutput << x << " " << w[1] << std::endl;
     preOutput << x << " " << w[2] << std::endl;
+
   }
   
   return 0;
