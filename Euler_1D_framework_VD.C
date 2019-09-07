@@ -13,22 +13,24 @@
 #include <limits>
 
 // Calculate energy using equations on slide 14 of Euler lecture notes
-double E(double r, double u, double p, double gamma) {
+double E(double r, double u, double p, double gamma) 
+{
     // where r is density, u is velocity, and p is pressure of an ideal gas
     return p/(gamma-1) + (0.5 * r * u * u);
 }
 
 // Convert from conserved variables to primitive variables
-std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma)
-{
+std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
+  
   std::array<double, 3> w_i;
 
   // Convert the conserved state variables q_i to the primitive variables w_i
   w_i[0] = q_i[0];           // density
   w_i[1] = q_i[1] / q_i[0];  // velocity
-  w_i[2] = (gamma-1) * (q_i[2] - 0.5 * q_i[0] * w_i[1] * w_i[1];  // pressure
+  w_i[2] = (gamma-1) * (q_i[2] - 0.5 * q_i[0] * w_i[1] * w_i[1]);  // pressure
   
   return w_i;
+
 }
 
 // Convert primitive state vector to conservative state vector

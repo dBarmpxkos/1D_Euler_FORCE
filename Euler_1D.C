@@ -1,8 +1,6 @@
-/* This program is designed to simulate the Euler equations
-   in 1 dimension, using the FORCE solver.
-
-   It provides output in ASCII format, suitable for plotting in gnuplot.  
- */
+/* Designed to simulate the Euler equations in 1 dimension, using the FORCE solver.
+   It provides output in ASCII format, suitable for plotting in gnuplot
+*/
 
 #include <array>
 #include <vector>
@@ -12,13 +10,21 @@
 #include <tuple>
 #include <limits>
 
+// Calculate energy using equations on slide 14 of Euler lecture notes
+double E(double r, double u, double p, double gamma) {
+    // where r is density, u is velocity, and p is pressure of an ideal gas
+    return p/(gamma-1) + (0.5 * r * u * u);
+}
+
 // Convert from conserved variables to primitive variables
-std::array<double, 3> primitive(std::array<double, 3>& q_i)
-{
+std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
+  
   std::array<double, 3> w_i;
 
-  // TODO
   // Convert the conserved state variables q_i to the primitive variables w_i
+  w_i[0] = q_i[0];           // density
+  w_i[1] = q_i[1] / q_i[0];  // velocity
+  w_i[2] = (gamma-1) * (q_i[2] - 0.5 * q_i[0] * w_i[1] * w_i[1]);  // pressure
   
   return w_i;
 }
@@ -28,8 +34,12 @@ std::array<double, 3> conservative(std::array<double, 3>& w_i)
 {
   std::array<double, 3> q_i;
 
-  // TODO
   // Convert the primitive variables w_i to the conserved variables q_i
+  // w_i = (r, u, p) and q_i = (r, r * u, E) - from slides 11 and 18
+
+  q_i[0] = w_i[0];                     // density
+  q_i[1] = w_i[0] * w_i[1];            // momentum
+  q_i[2] = E(w_i[0], w_i[1], w_i[2]);  // energy
 
   return q_i;
 }
@@ -85,6 +95,7 @@ void initialiseData(std::vector<std::array<double, 3> >& q,
     // Add suitable error handling
   }
 }
+
 // Compute flux-vector corresponding to given state vector
 std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
 {
@@ -126,10 +137,11 @@ double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
   // Compute the maximum wavespeed over the entire domain, and use this to compute the timestep
   for(int i=0 ; i < n ; i++)
   {
-  	/*  i need to find
-  	 *  expression for p/rho from q values */
+/* !! i need to find !!
+   expression for p/rho from q values
+*/
   	Cs[i] = sqrt( gamma * (p[i]/rho[i]) );
-    /*  i need to find expression for Ui from q values */
+/*  i need to find expression for Ui from q values */
   	alphaOld = abs(u[i]) + Cs[i];
   	if (alphaOld > alphaMax) 
   		alphaOld = alphaMax;
@@ -140,9 +152,9 @@ double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
 }
 
 // Compute the FORCE flux between two states uL and uR in coordinate direction coord.
-std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, 
-								std::array<double, 3>& q_i, 
-								double dx, double dt){
+std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, 
+								                double dx, double dt)
+{
 
 	double halfDelta = 0.5 * (dx/dt);
 	std::array<double, 3> fluxRM;
@@ -162,8 +174,10 @@ std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1,
 }
 
 // Compute the array of fluxes from the given data array
-void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, double dx, double dt)
+void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, 
+                   double dx, double dt)
 {
+
   int n = q.size();
   // TODO - consider why this is the choice of index range for the loop
   for(unsigned int i=1 ; i < n ; i++)
@@ -172,7 +186,6 @@ void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::arra
   }
 }
 
-
 int main(void)
 {
   // User-defined parameters
@@ -180,8 +193,9 @@ int main(void)
   int test;
   // TODO read in cells, and also the desired test
   
-  double CFL = 0.9;
-  double finalT;
+  const double gamma = 1.4;
+  const double CFL = 0.9;
+  const double finalT;
   
   // Set initial vectors:
   std::vector<std::array<double, 3> > q(cells+2);
@@ -211,7 +225,7 @@ int main(void)
     {
       for(int var = 0; var < 3; ++var)
       {
-	q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
+  q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
       }
     }
 
