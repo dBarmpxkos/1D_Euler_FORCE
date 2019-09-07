@@ -44,23 +44,18 @@ std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
   return q_i;
 }
 
-// Fill the conservative state vector with the initial data
-void initialiseData(std::vector<std::array<double, 3> >& q, 
-					int test, double finalT)
+/* populates data according to cell value */
+bool initRoutine(std::array<double, 3> & w_l, std::array<double, 3> & w_r )
 {
-  int n = q.size();
-
-  if(test == 1)
-  {
     for(int i = 0; i < n; ++i)
     {
       std::array<double, 3> w;
       if(i < n/2)
       {
-		w = {1.0,0.0,1.0};
+		w = w_l;
       }
       else {
-		w = {0.125,0.0,0.1};
+		w = w_r;
       }
       
       std::array<double, 3> q_i = conservative(w);
@@ -68,27 +63,20 @@ void initialiseData(std::vector<std::array<double, 3> >& q,
       q[i][1] = q_i[1];
       q[i][2] = q_i[2];
     }
-  }
-  else if(test == 2)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
-  else if(test == 3)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
-  else if(test == 4)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
-  else if(test == 5)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
+
+}
+
+// Fill the conservative state vector with the initial data
+void initialiseData(std::vector<std::array<double, 3> >& q, 
+					int test, double finalT)
+{
+  int n = q.size();
+
+  if(test == 1) 	 initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
+  else if(test == 2) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
+  else if(test == 3) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
+  else if(test == 4) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
+  else if(test == 5) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
   else
   {
     // TODO
@@ -112,15 +100,15 @@ std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
     	else {
     		t = T+4;
     	}
-
+    	/* hardcode for demo, will change */
     	pt = constants::p[t];
     	rt = constants::r[t];
     	ut = constants::u[t];
     	/* Compute E */
     	E = calc_E(r, u, p, gamma);
-    	fq.at(i)[0] = rt * ut;
-    	fq.at(i)[1] = (rt * pow(ut,2)) + pt;
-    	fq.at(i)[2] = (E + pt)*ut;
+    	fq.[i][0] = rt * ut;
+    	fq.[i][1] = (rt * pow(ut,2)) + pt;
+    	fq.[i][2] = (E + pt)*ut;
 //		std::cout << fq.at(i)[0] << "\t" << fq.at(i)[1] << "\t" << fq.at(i)[2] << "\n";
  
   return f;
@@ -212,7 +200,7 @@ int main(void)
     // Implement this function, and then uncomment
     // computeDomainBoundaries(q)
     
-    double dt = computeTimestep(q, dx);
+    double dt = computeTimestep(primitive(q), dx);
 
     computeFluxes(q, flux, dx, dt);
 
