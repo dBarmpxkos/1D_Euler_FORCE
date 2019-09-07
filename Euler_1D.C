@@ -45,18 +45,16 @@ std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 }
 
 /* populates data according to cell value */
-bool initRoutine(std::array<double, 3> & w_l, std::array<double, 3> & w_r )
+bool initRoutine(std::array<double, 3> & w_l, std::array<double, 3> & w_r, 
+				 std::vector<std::array<double, 3> >& q )
 {
+	int n = q.size();
     for(int i = 0; i < n; ++i)
     {
       std::array<double, 3> w;
-      if(i < n/2)
-      {
-		w = w_l;
-      }
-      else {
-		w = w_r;
-      }
+
+      if (i < n/2) w = w_l;
+      else w = w_r;
       
       std::array<double, 3> q_i = conservative(w);
       q[i][0] = q_i[0];
@@ -70,13 +68,12 @@ bool initRoutine(std::array<double, 3> & w_l, std::array<double, 3> & w_r )
 void initialiseData(std::vector<std::array<double, 3> >& q, 
 					int test, double finalT)
 {
-  int n = q.size();
 
-  if(test == 1) 	 initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
-  else if(test == 2) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
-  else if(test == 3) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
-  else if(test == 4) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
-  else if(test == 5) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1});
+  if 	  (test == 1) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 2) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 3) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 4) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 5) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
   else
   {
     // TODO
@@ -84,6 +81,7 @@ void initialiseData(std::vector<std::array<double, 3> >& q,
   }
 }
 
+/* despoina */
 // Compute flux-vector corresponding to given state vector
 std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
 {
@@ -106,16 +104,26 @@ std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
     	ut = constants::u[t];
     	/* Compute E */
     	E = calc_E(r, u, p, gamma);
-    	fq.[i][0] = rt * ut;
+    	fq.[i][0] =  rt * ut;
     	fq.[i][1] = (rt * pow(ut,2)) + pt;
     	fq.[i][2] = (E + pt)*ut;
 //		std::cout << fq.at(i)[0] << "\t" << fq.at(i)[1] << "\t" << fq.at(i)[2] << "\n";
  
   return f;
 }
+/* despoina */
 
+/* Compute domain boundary conditions */
+bool computeDomainBoundaries()
+{
+
+
+
+	return 1;
+}
 // Compute the maximum stable time-step for the given data
-double computeTimestep(std::vector<std::array<double, 3>> &w, double dx){
+double computeTimestep(std::vector<std::array<double, 3>> &w, double dx)
+{
 
   double dt, alphaOld, alphaMax;
   int n = q.size();
@@ -137,7 +145,7 @@ double computeTimestep(std::vector<std::array<double, 3>> &w, double dx){
 
 // Compute the FORCE flux between two states uL and uR in coordinate direction coord.
 std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, 
-								                double dx, double dt)
+								double dx, double dt)
 {
 
 	double halfDelta = 0.5 * (dx/dt);
@@ -196,10 +204,9 @@ int main(void)
   
   while( t < finalT )
   {
-    // TODO
-    // Implement this function, and then uncomment
-    // computeDomainBoundaries(q)
-    
+
+	computeDomainBoundaries(q);
+
     double dt = computeTimestep(primitive(q), dx);
 
     computeFluxes(q, flux, dx, dt);
@@ -228,14 +235,15 @@ int main(void)
   // TODO Should i start from i=1? It's what framework originally contained:
   //for(unsigned int i=1 ; i < cells + 1 ; i++)
 
-  for(unsigned int i=0 ; i < cells; i++) {
+  for(unsigned int i=0 ; i < cells; i++) 
+  {
 
-    double x = (double(i) + 0.5) * dx;
-    std::array<double, 3> w = primitive(q[i]);
-    
-    rhoOutput << x << " " << w[0] << std::endl;
-    velOutput << x << " " << w[1] << std::endl;
-    preOutput << x << " " << w[2] << std::endl;
+	double x = (double(i) + 0.5) * dx;
+	std::array<double, 3> w = primitive(q[i]);
+
+	rhoOutput << x << " " << w[0] << std::endl;
+	velOutput << x << " " << w[1] << std::endl;
+	preOutput << x << " " << w[2] << std::endl;
 
   }
   
