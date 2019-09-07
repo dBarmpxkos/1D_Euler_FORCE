@@ -11,7 +11,7 @@
 #include <limits>
 
 // Calculate energy using equations on slide 14 of Euler lecture notes
-double E(double r, double u, double p, double gamma) {
+double calc_E(double r, double u, double p, double gamma) {
     // where r is density, u is velocity, and p is pressure of an ideal gas
     return p/(gamma-1) + (0.5 * r * u * u);
 }
@@ -117,8 +117,7 @@ std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
     	rt = constants::r[t];
     	ut = constants::u[t];
     	/* Compute E */
-    	E = pt/constants::gamma + ((1/2)*rt*pow(ut, 2)); 
-
+    	E = calc_E(r, u, p, gamma);
     	fq.at(i)[0] = rt * ut;
     	fq.at(i)[1] = (rt * pow(ut,2)) + pt;
     	fq.at(i)[2] = (E + pt)*ut;
