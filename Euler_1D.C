@@ -127,7 +127,7 @@ std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
 }
 
 // Compute the maximum stable time-step for the given data
-double computeTimestep(std::vector<std::array<double, 3> >& w, double dx){
+double computeTimestep(std::vector<std::array<double, 3>> &w, double dx){
 
   double dt, alphaOld, alphaMax;
   int n = q.size();
