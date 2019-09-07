@@ -30,16 +30,16 @@ std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
 }
 
 // Convert primitive state vector to conservative state vector
-std::array<double, 3> conservative(std::array<double, 3>& w_i)
+std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 {
   std::array<double, 3> q_i;
 
   // Convert the primitive variables w_i to the conserved variables q_i
   // w_i = (r, u, p) and q_i = (r, r * u, E) - from slides 11 and 18
 
-  q_i[0] = w_i[0];                     // density
-  q_i[1] = w_i[0] * w_i[1];            // momentum
-  q_i[2] = E(w_i[0], w_i[1], w_i[2]);  // energy
+  q_i[0] = w_i[0];                                 // density
+  q_i[1] = w_i[0] * w_i[1];                        // momentum
+  q_i[2] = calc_E(w_i[0], w_i[1], w_i[2], gamma);  // energy
 
   return q_i;
 }
@@ -127,7 +127,7 @@ std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
 }
 
 // Compute the maximum stable time-step for the given data
-double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
+double computeTimestep(std::vector<std::array<double, 3> >& w, double dx){
 
   double dt, alphaOld, alphaMax;
   int n = q.size();
@@ -136,12 +136,9 @@ double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
   // Compute the maximum wavespeed over the entire domain, and use this to compute the timestep
   for(int i=0 ; i < n ; i++)
   {
-/* !! i need to find !!
-   expression for p/rho from q values
-*/
-  	Cs[i] = sqrt( gamma * (p[i]/rho[i]) );
-/*  i need to find expression for Ui from q values */
-  	alphaOld = abs(u[i]) + Cs[i];
+	/* w_i = (r, u, p) */
+  	Cs[i] = sqrt( gamma * (q[2][i]/q[0][i]) );
+  	alphaOld = abs(q[1][i]) + Cs[i];
   	if (alphaOld > alphaMax) 
   		alphaOld = alphaMax;
   }
@@ -237,20 +234,21 @@ int main(void)
   // Output
 
   std::ofstream rhoOutput("density.dat");
-  std::ofstream velOutput("density.dat");
-  std::ofstream preOutput("density.dat"); 
+  std::ofstream velOutput("velocity.dat");
+  std::ofstream preOutput("pressure.dat"); 
 
-  for(unsigned int i=1 ; i < cells + 1 ; i++)
-  {
-    double x;
-    // TODO
-    // Compute the value of x associated with cell i
-    
+  // TODO Should i start from i=1? It's what framework originally contained:
+  //for(unsigned int i=1 ; i < cells + 1 ; i++)
+
+  for(unsigned int i=0 ; i < cells; i++) {
+
+    double x = (double(i) + 0.5) * dx;
     std::array<double, 3> w = primitive(q[i]);
     
     rhoOutput << x << " " << w[0] << std::endl;
     velOutput << x << " " << w[1] << std::endl;
     preOutput << x << " " << w[2] << std::endl;
+
   }
   
   return 0;
