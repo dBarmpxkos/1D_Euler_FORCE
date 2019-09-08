@@ -47,12 +47,14 @@ std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 }
 
 // Fill the conservative state vector with the initial data
-void initialiseData(std::vector<std::array<double, 3> >& q, int test, double finalT)
+void initialiseData(std::vector<std::array<double, 3> >& q, int test, double& finalT)
 {
   int n = q.size();
 
   if(test == 1)
   {
+    finalT = 0.25;
+
     for(int i = 0; i < n; ++i)
     {
       std::array<double, 3> w;
@@ -152,7 +154,7 @@ std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<dou
 void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, double dx, double dt)
 {
   int n = q.size();
-  // TODO - consider why this is the choice of index range for the loop
+  // Flux for current cell calculated using values from previous cell. Don't have values for cell i=-1 so can't start loop at i=0
   for(unsigned int i=1 ; i < n ; i++)
   {
     flux[i] = FORCEflux(q[i-1], q[i], dx, dt);
@@ -164,8 +166,14 @@ int main(void)
   // User-defined parameters
   int cells;
   int test;
-  // TODO read in cells, and also the desired test
+
+  std::cout << "Number of cells: " << std::flush;
+  std::cin >> cells;
+
+  std::cout << "Test number (1-5): " << std::flush;
+  std::cin >> test;
   
+
   const double gamma = 1.4;
   const double CFL = 0.9;
   const double finalT;
@@ -180,8 +188,9 @@ int main(void)
   // Do simulation
   double t = 0;
   double dx = 1.0 / cells;
-  // TODO
   // You may wish to change the 1.0 to a specification of your own domain size
+
+  std::cout << "Simulation started..." << std::endl;
   
   while( t < finalT )
   {
@@ -204,8 +213,8 @@ int main(void)
 
     t += dt;
 
-    // TODO
     // Output some useful data to screen here so you know the code is running as expected
+    std::cout << "    t = " << t << " => " << t/finalT * 100.0 << "%" << std::endl;
   }
  
   // Output
@@ -214,10 +223,7 @@ int main(void)
   std::ofstream velOutput("velocity.dat");
   std::ofstream preOutput("pressure.dat"); 
 
-  // TODO Should i start from i=1? It's what framework originally contained:
-  //for(unsigned int i=1 ; i < cells + 1 ; i++)
-
-  for(unsigned int i=0 ; i < cells; i++) {
+  for(unsigned int i=1 ; i < cells + 1 ; i++) {
 
     double x = (double(i) + 0.5) * dx;
     std::array<double, 3> w = primitive(q[i]);
