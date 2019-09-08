@@ -1,8 +1,6 @@
-/* This program is designed to simulate the Euler equations
-   in 1 dimension, using the FORCE solver.
-
-   It provides output in ASCII format, suitable for plotting in gnuplot.  
- */
+/* Designed to simulate the Euler equations in 1 dimension, using the FORCE solver.
+   It provides output in ASCII format, suitable for plotting in gnuplot
+*/
 
 #include <array>
 #include <vector>
@@ -12,79 +10,81 @@
 #include <tuple>
 #include <limits>
 
+// Calculate energy using equations on slide 14 of Euler lecture notes
+double calc_E(double r, double u, double p, double gamma) {
+    // where r is density, u is velocity, and p is pressure of an ideal gas
+    return p/(gamma-1) + (0.5 * r * u * u);
+}
+
 // Convert from conserved variables to primitive variables
-std::array<double, 3> primitive(std::array<double, 3>& q_i)
-{
+std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
+  
   std::array<double, 3> w_i;
 
-  // TODO
   // Convert the conserved state variables q_i to the primitive variables w_i
+  w_i[0] = q_i[0];           // density
+  w_i[1] = q_i[1] / q_i[0];  // velocity
+  w_i[2] = (gamma-1) * (q_i[2] - 0.5 * q_i[0] * w_i[1] * w_i[1]);  // pressure
   
   return w_i;
 }
 
 // Convert primitive state vector to conservative state vector
-std::array<double, 3> conservative(std::array<double, 3>& w_i)
+std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 {
   std::array<double, 3> q_i;
 
-  // TODO
   // Convert the primitive variables w_i to the conserved variables q_i
+  // w_i = (r, u, p) and q_i = (r, r * u, E) - from slides 11 and 18
+
+  q_i[0] = w_i[0];                                 // density
+  q_i[1] = w_i[0] * w_i[1];                        // momentum
+  q_i[2] = calc_E(w_i[0], w_i[1], w_i[2], gamma);  // energy
 
   return q_i;
 }
 
-// Fill the conservative state vector with the initial data
-void initialiseData(std::vector<std::array<double, 3> >& q, 
-					int test, double finalT)
+/* populates data according to cell value */
+bool initRoutine(double & finalT, 
+				 std::array<double, 3> & w_l, std::array<double, 3> & w_r, 
+				 std::vector<std::array<double, 3> >& q )
 {
-  int n = q.size();
-
-  if(test == 1)
-  {
+	int n = q.size();
     for(int i = 0; i < n; ++i)
     {
       std::array<double, 3> w;
-      if(i < n/2)
-      {
-		w = {1.0,0.0,1.0};
-      }
-      else {
-		w = {0.125,0.0,0.1};
-      }
+
+      if (i < n/2) w = w_l;
+      else w = w_r;
       
       std::array<double, 3> q_i = conservative(w);
       q[i][0] = q_i[0];
       q[i][1] = q_i[1];
       q[i][2] = q_i[2];
     }
-  }
-  else if(test == 2)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
-  else if(test == 3)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
-  else if(test == 4)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
-  else if(test == 5)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
+
+    finalT = finalTperCase;
+
+}
+
+// Fill the conservative state vector with the initial data
+void initialiseData(std::vector<std::array<double, 3> >& q, 
+					int test, double finalT)
+{
+
+  if 	  (test == 1) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 2) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 3) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 4) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
+  else if (test == 5) initRoutine( {1.0, 0.0, 1.0}, {0.125, 0.0, 0.1}, q);
   else
   {
     // TODO
     // Add suitable error handling
   }
 }
+
+/* despoina */
 // Compute flux-vector corresponding to given state vector
 std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
 {
@@ -101,23 +101,33 @@ std::array<double, 3> flux(std::vector<std::array<double, 3>> &fq, int T)
     	else {
     		t = T+4;
     	}
-
+    	/* hardcode for demo, will change */
     	pt = constants::p[t];
     	rt = constants::r[t];
     	ut = constants::u[t];
     	/* Compute E */
-    	E = pt/constants::gamma + ((1/2)*rt*pow(ut, 2)); 
-
-    	fq.at(i)[0] = rt * ut;
-    	fq.at(i)[1] = (rt * pow(ut,2)) + pt;
-    	fq.at(i)[2] = (E + pt)*ut;
+    	E = calc_E(r, u, p, gamma);
+    	fq.[i][0] =  rt * ut;
+    	fq.[i][1] = (rt * pow(ut,2)) + pt;
+    	fq.[i][2] = (E + pt)*ut;
 //		std::cout << fq.at(i)[0] << "\t" << fq.at(i)[1] << "\t" << fq.at(i)[2] << "\n";
  
   return f;
 }
+/* despoina */
+
+/* Compute domain boundary conditions */
+bool computeDomainBoundaries()
+{
+
+
+
+	return 1;
+}
 
 // Compute the maximum stable time-step for the given data
-double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
+double computeTimestep(std::vector<std::array<double, 3>> &w, double dx)
+{
 
   double dt, alphaOld, alphaMax;
   int n = q.size();
@@ -126,11 +136,9 @@ double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
   // Compute the maximum wavespeed over the entire domain, and use this to compute the timestep
   for(int i=0 ; i < n ; i++)
   {
-  	/*  i need to find
-  	 *  expression for p/rho from q values */
-  	Cs[i] = sqrt( gamma * (p[i]/rho[i]) );
-    /*  i need to find expression for Ui from q values */
-  	alphaOld = abs(u[i]) + Cs[i];
+	/* w_i = (r, u, p) */
+  	Cs[i] = sqrt( gamma * (q[2][i]/q[0][i]) );
+  	alphaOld = abs(q[1][i]) + Cs[i];
   	if (alphaOld > alphaMax) 
   		alphaOld = alphaMax;
   }
@@ -140,9 +148,9 @@ double computeTimestep(std::vector<std::array<double, 3> >& q, double dx){
 }
 
 // Compute the FORCE flux between two states uL and uR in coordinate direction coord.
-std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, 
-								std::array<double, 3>& q_i, 
-								double dx, double dt){
+std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, 
+								double dx, double dt)
+{
 
 	double halfDelta = 0.5 * (dx/dt);
 	std::array<double, 3> fluxRM;
@@ -162,8 +170,10 @@ std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1,
 }
 
 // Compute the array of fluxes from the given data array
-void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, double dx, double dt)
+void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, 
+                   double dx, double dt)
 {
+
   int n = q.size();
   // TODO - consider why this is the choice of index range for the loop
   for(unsigned int i=1 ; i < n ; i++)
@@ -172,7 +182,6 @@ void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::arra
   }
 }
 
-
 int main(void)
 {
   // User-defined parameters
@@ -180,8 +189,9 @@ int main(void)
   int test;
   // TODO read in cells, and also the desired test
   
-  double CFL = 0.9;
-  double finalT;
+  const double gamma = 1.4;
+  const double CFL = 0.9;
+  const double finalT;
   
   // Set initial vectors:
   std::vector<std::array<double, 3> > q(cells+2);
@@ -198,11 +208,10 @@ int main(void)
   
   while( t < finalT )
   {
-    // TODO
-    // Implement this function, and then uncomment
-    // computeDomainBoundaries(q)
-    
-    double dt = computeTimestep(q, dx);
+
+	computeDomainBoundaries(q);
+
+    double dt = computeTimestep(primitive(q), dx);
 
     computeFluxes(q, flux, dx, dt);
 
@@ -211,7 +220,7 @@ int main(void)
     {
       for(int var = 0; var < 3; ++var)
       {
-	q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
+  q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
       }
     }
 
@@ -224,20 +233,22 @@ int main(void)
   // Output
 
   std::ofstream rhoOutput("density.dat");
-  std::ofstream velOutput("density.dat");
-  std::ofstream preOutput("density.dat"); 
+  std::ofstream velOutput("velocity.dat");
+  std::ofstream preOutput("pressure.dat"); 
 
-  for(unsigned int i=1 ; i < cells + 1 ; i++)
+  // TODO Should i start from i=1? It's what framework originally contained:
+  //for(unsigned int i=1 ; i < cells + 1 ; i++)
+
+  for(unsigned int i=0 ; i < cells; i++) 
   {
-    double x;
-    // TODO
-    // Compute the value of x associated with cell i
-    
-    std::array<double, 3> w = primitive(q[i]);
-    
-    rhoOutput << x << " " << w[0] << std::endl;
-    velOutput << x << " " << w[1] << std::endl;
-    preOutput << x << " " << w[2] << std::endl;
+
+	double x = (double(i) + 0.5) * dx;
+	std::array<double, 3> w = primitive(q[i]);
+
+	rhoOutput << x << " " << w[0] << std::endl;
+	velOutput << x << " " << w[1] << std::endl;
+	preOutput << x << " " << w[2] << std::endl;
+
   }
   
   return 0;
