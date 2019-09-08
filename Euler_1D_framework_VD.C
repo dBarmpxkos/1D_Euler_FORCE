@@ -13,8 +13,7 @@
 #include <limits>
 
 // Calculate energy using equations on slide 14 of Euler lecture notes
-double E(double r, double u, double p, double gamma) 
-{
+double calc_E(double r, double u, double p, double gamma) {
     // where r is density, u is velocity, and p is pressure of an ideal gas
     return p/(gamma-1) + (0.5 * r * u * u);
 }
@@ -30,20 +29,19 @@ std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
   w_i[2] = (gamma-1) * (q_i[2] - 0.5 * q_i[0] * w_i[1] * w_i[1]);  // pressure
   
   return w_i;
-
 }
 
 // Convert primitive state vector to conservative state vector
-std::array<double, 3> conservative(std::array<double, 3>& w_i)
+std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 {
   std::array<double, 3> q_i;
 
   // Convert the primitive variables w_i to the conserved variables q_i
   // w_i = (r, u, p) and q_i = (r, r * u, E) - from slides 11 and 18
 
-  q_i[0] = w_i[0];                     // density
-  q_i[1] = w_i[0] * w_i[1];            // momentum
-  q_i[2] = E(w_i[0], w_i[1], w_i[2]);  // energy
+  q_i[0] = w_i[0];                                 // density
+  q_i[1] = w_i[0] * w_i[1];                        // momentum
+  q_i[2] = calc_E(w_i[0], w_i[1], w_i[2], gamma);  // energy
 
   return q_i;
 }
@@ -99,13 +97,17 @@ void initialiseData(std::vector<std::array<double, 3> >& q, int test, double fin
     // Add suitable error handling
   }
 }
+
 // Compute flux-vector corresponding to given state vector
-std::array<double, 3> flux()// TODO = put some variables in the function call
+// Equations for flux given on slide 11 of Euler notes
+std::array<double, 3> flux(std::array<double, 3>& q_i, double gamma)
 {
   std::array<double, 3> f;
+  std::array<double, 3> w_i = primitive(q_i, gamma);
 
-  // TODO
-  // Compute the flux
+  f[0] = w_i[0] * w_i[1];                    // r * u
+  f[1] = w_i[0] * w_i[1] * w_i[1] + w_i[2];  // r * u^2 + p
+  f[2] = (q_i[2] + w_i[2]) * w_i[1];         // (E + p) * u
   
   return f;
 }
@@ -127,17 +129,21 @@ double computeTimestep(std::vector<std::array<double, 3> >& q, double dx)
 std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, double dx, double dt)
 {
 
-  std::array<double, 3> fluxRM;
-  // TODO
   // Compute the Richtmyer flux using q_i and q_iMinus1
+  std::array<double, 3> fluxRM;
+  std::array<double, 3> q_iHalf;
 
-  std::array<double, 3> fluxLF;
-  // TODO
+  q_iHalf = 0.5 * (q_iMinus1 + q_i) + 0.5 * (dt/dx) * (flux(q_iMinus1) - flux(q_i));
+  fluxRM = flux(q_iHalf);
+
+
   // Compute the Lax-Friedrichs flux using q_i and q_iMinus1
+  std::array<double, 3> fluxLF;
+  fluxLF = 0.5 * (flux(q_iMinus1) + flux(q_i)) + 0.5 * (dx/dt) * (q_iMinus1 - q_i);
   
   std::array<double, 3> fluxForce;
-  // TODO
   // Compute the FORCE flux
+  fluxForce =  0.5 * (fluxRM + fluxLF);
   
   return fluxForce;
 }
@@ -152,7 +158,6 @@ void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::arra
     flux[i] = FORCEflux(q[i-1], q[i], dx, dt);
   }
 }
-
 
 int main(void)
 {
@@ -193,7 +198,7 @@ int main(void)
     {
       for(int var = 0; var < 3; ++var)
       {
-	q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
+  q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
       }
     }
 
@@ -206,21 +211,23 @@ int main(void)
   // Output
 
   std::ofstream rhoOutput("density.dat");
-  std::ofstream velOutput("density.dat");
-  std::ofstream preOutput("density.dat"); 
+  std::ofstream velOutput("velocity.dat");
+  std::ofstream preOutput("pressure.dat"); 
 
-  for(unsigned int i=1 ; i < cells + 1 ; i++)
-  {
-    double x;
-    // TODO
-    // Compute the value of x associated with cell i
-    
+  // TODO Should i start from i=1? It's what framework originally contained:
+  //for(unsigned int i=1 ; i < cells + 1 ; i++)
+
+  for(unsigned int i=0 ; i < cells; i++) {
+
+    double x = (double(i) + 0.5) * dx;
     std::array<double, 3> w = primitive(q[i]);
     
     rhoOutput << x << " " << w[0] << std::endl;
     velOutput << x << " " << w[1] << std::endl;
     preOutput << x << " " << w[2] << std::endl;
+
   }
   
   return 0;
 }
+
