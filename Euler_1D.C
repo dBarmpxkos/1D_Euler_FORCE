@@ -18,6 +18,29 @@ double calc_E(double r, double u, double p, double gamma) {
     return p/(gamma-1) + (0.5 * r * u * u);
 }
 
+
+std::array<double, 3> array_addition(std::array<double, 3> firstArray, std::array<double, 3> secondArray)
+{
+
+  std::array<double, firstArray.size() > outputArray;
+  for (int i = 0; i < firstArray.size(); i++)
+  {
+    outputArray[i] = firstArray[i] + secondArray[i];
+  }
+  return outputArray;
+}
+
+std::array<double, 3> array_subtraction(std::array<double, 3> firstArray, std::array<double, 3> secondArray)
+{
+
+  std::array<double, firstArray.size() > outputArray;
+  for (int i = 0; i < firstArray.size(); i++)
+  {
+    outputArray[i] = firstArray[i] - secondArray[i];
+  }
+  return outputArray;
+}
+
 // Convert from conserved variables to primitive variables
 std::array<double, 3> primitive(std::array<double, 3>& q_i, double gamma){
   
@@ -47,7 +70,7 @@ std::array<double, 3> conservative(std::array<double, 3>& w_i, double gamma)
 }
 
 // Fill the conservative state vector with the initial data
-void initialiseData(std::vector<std::array<double, 3> >& q, int test, double& finalT)
+void initialiseData(double gamma, std::vector<std::array<double, 3> >& q, int test, double& finalT)
 {
   int n = q.size();
 
@@ -67,31 +90,99 @@ void initialiseData(std::vector<std::array<double, 3> >& q, int test, double& fi
 	w = {0.125,0.0,0.1};
       }
       
-      std::array<double, 3> q_i = conservative(w);
+      std::array<double, 3> q_i = conservative(w, gamma);
+      q.at(i)[0] = q_i[0];
+      q.at(i)[1] = q_i[1];
+      q.at(i)[2] = q_i[2];
+    }
+  }
+  else if(test == 2)
+  {
+    finalT = 0.25;
+
+    for(int i = 0; i < n; ++i)
+    {
+      std::array<double, 3> w;
+      if(i < n/2)
+      {
+  w = {1.0,0.0,1.0};
+      }
+      else
+      {
+  w = {0.125,0.0,0.1};
+      }
+      
+      std::array<double, 3> q_i = conservative(w, gamma);
       q[i][0] = q_i[0];
       q[i][1] = q_i[1];
       q[i][2] = q_i[2];
     }
   }
-  else if(test == 2)
-  {
-    // TODO
-    // Insert initial data for this test
-  }
   else if(test == 3)
   {
-    // TODO
-    // Insert initial data for this test
+    finalT = 0.25;
+
+    for(int i = 0; i < n; ++i)
+    {
+      std::array<double, 3> w;
+      if(i < n/2)
+      {
+  w = {1.0,0.0,1.0};
+      }
+      else
+      {
+  w = {0.125,0.0,0.1};
+      }
+      
+      std::array<double, 3> q_i = conservative(w, gamma);
+      q[i][0] = q_i[0];
+      q[i][1] = q_i[1];
+      q[i][2] = q_i[2];
+    }
   }
   else if(test == 4)
   {
-    // TODO
-    // Insert initial data for this test
+    finalT = 0.25;
+
+    for(int i = 0; i < n; ++i)
+    {
+      std::array<double, 3> w;
+      if(i < n/2)
+      {
+  w = {1.0,0.0,1.0};
+      }
+      else
+      {
+  w = {0.125,0.0,0.1};
+      }
+      
+      std::array<double, 3> q_i = conservative(w, gamma);
+      q[i][0] = q_i[0];
+      q[i][1] = q_i[1];
+      q[i][2] = q_i[2];
+    }
   }
   else if(test == 5)
   {
-    // TODO
-    // Insert initial data for this test
+    finalT = 0.25;
+
+    for(int i = 0; i < n; ++i)
+    {
+      std::array<double, 3> w;
+      if(i < n/2)
+      {
+  w = {1.0,0.0,1.0};
+      }
+      else
+      {
+  w = {0.125,0.0,0.1};
+      }
+      
+      std::array<double, 3> q_i = conservative(w, gamma);
+      q[i][0] = q_i[0];
+      q[i][1] = q_i[1];
+      q[i][2] = q_i[2];
+    }
   }
   else
   {
@@ -115,58 +206,92 @@ std::array<double, 3> flux(std::array<double, 3>& q_i, double gamma)
 }
 
 // Compute the maximum stable time-step for the given data
-double computeTimestep(std::vector<std::array<double, 3>> &w, double dx)
+double computeTimestep(double gamma, int cellNumber, std::vector<std::array<double, 3>> &q, double dx, double CFL)
 {
 
-  double dt, alphaOld, alphaMax;
-  int n = q.size();
-  std::array<double, n> Cs;
+  double dt = 0, alphaOld = 0, alphaMax = 0;
+  std::vector<double> Cs;
+  std::cout << "Gamma: " << gamma << std::endl;
+  std::cout << "cellNumber: " << cellNumber << std::endl;
+  std::cout << "dx: " << dx << std::endl;
+  std::cout << "CFL: " << CFL << std::endl;
 
   // Compute the maximum wavespeed over the entire domain, and use this to compute the timestep
-  for(int i=0 ; i < n ; i++)
+  for(int i=0 ; i < cellNumber ; i++)
   {
   /* w_i = (r, u, p) */
-    Cs[i] = sqrt( gamma * (q[2][i]/q[0][i]) );
-    alphaOld = abs(q[1][i]) + Cs[i];
-    if (alphaOld > alphaMax) 
-      alphaOld = alphaMax;
+    Cs.push_back(sqrt( gamma * (q[2][i]/q[0][i]) ));
+    std::cout << "Cs: " << Cs[i] << std::endl;
+    alphaOld = abs(q.at(1)[i]) + Cs[i];
+    std::cout << "alpha: " << alphaOld << std::endl;
+
+    if (alphaOld > alphaMax) alphaMax = alphaOld;
   }
+
   dt = (CFL*dx)/alphaMax;
+  std::cout << "dt: " << dt << std::endl;
 
   return dt;
 }
 
 // Compute the FORCE flux between two states uL and uR in coordinate direction coord.
-std::array<double, 3> FORCEflux(std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, double dx, double dt)
+std::array<double, 3> FORCEflux(double gamma, std::array<double, 3>& q_iMinus1, std::array<double, 3>& q_i, double dx, double dt)
 {
+
+  std::array<double, 3> fluxLF_temp1;
+  std::array<double, 3> fluxLF_temp2;
 
   // Compute the Richtmyer flux using q_i and q_iMinus1
   std::array<double, 3> fluxRM;
   std::array<double, 3> q_iHalf;
+  double halfDeltaTDeltaX = 0.5 * (dt/dx);
 
-  q_iHalf = 0.5 * (q_iMinus1 + q_i) + 0.5 * (dt/dx) * (flux(q_iMinus1) - flux(q_i));
-  fluxRM = flux(q_iHalf);
+  fluxLF_temp1 = array_addition(q_iMinus1, q_i);
+  fluxLF_temp2 = array_subtraction(flux(q_iMinus1, gamma), flux(q_i, gamma));
 
+  // q_iHalf = 0.5 * (array_addition(q_iMinus1, q_i)) + halfdelta * 
+  for (int i=0;i < fluxLF_temp1.size(); i++){
+    fluxLF_temp1[i] *= 0.5;
+    fluxLF_temp2[i] *= halfDeltaTDeltaX;
+  }
+  q_iHalf = array_addition(fluxLF_temp1, fluxLF_temp2);
+  fluxRM = flux(q_iHalf, gamma);
 
   // Compute the Lax-Friedrichs flux using q_i and q_iMinus1
   std::array<double, 3> fluxLF;
-  fluxLF = 0.5 * (flux(q_iMinus1) + flux(q_i)) + 0.5 * (dx/dt) * (q_iMinus1 - q_i);
-  
+
+  double halfDeltaXDeltaT = 0.5 * (dx/dt);
+  // fluxLF = flux_temp1 + flux_temp2;
+  fluxLF_temp1 = array_addition(flux(q_iMinus1, gamma), flux(q_i, gamma));
+  fluxLF_temp2 = array_subtraction(q_iMinus1, q_i);
+
+  for (int i=0;i < fluxLF_temp1.size(); i++){
+    fluxLF_temp1[i] *= 0.5;
+    fluxLF_temp2[i] *= halfDeltaXDeltaT;
+  }
+
+  fluxLF = array_addition(fluxLF_temp1, fluxLF_temp2);
+
   std::array<double, 3> fluxForce;
   // Compute the FORCE flux
-  fluxForce =  0.5 * (fluxRM + fluxLF);
+  // fluxForce =  0.5 * (fluxRM + fluxLF);
+
+  for (int i=0; i<3; i++){
+    fluxForce[i] = 0.5 * (fluxLF[i] + fluxRM[i]);
+  }
   
   return fluxForce;
 }
 
 // Compute the array of fluxes from the given data array
-void computeFluxes(std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, double dx, double dt)
+void computeFluxes(double gamma, std::vector<std::array<double, 3> >& q, std::vector<std::array<double, 3> >& flux, double dx, double dt)
 {
   int n = q.size();
+  std::cout << "N: " << n << std::endl;
   // Flux for current cell calculated using values from previous cell. Don't have values for cell i=-1 so can't start loop at i=0
   for(unsigned int i=1 ; i < n ; i++)
   {
-    flux[i] = FORCEflux(q[i-1], q[i], dx, dt);
+    flux[i] = FORCEflux(gamma, q[i-1], q[i], dx, dt);
   }
 }
 
@@ -185,14 +310,14 @@ int main(void)
 
   const double gamma = 1.4;
   const double CFL = 0.9;
-  const double finalT;
+  double finalT;
   
   // Set initial vectors:
   std::vector<std::array<double, 3> > q(cells+2);
   std::vector<std::array<double, 3> > flux(cells+2);
   // TODO - consider the extent of the vectors, the flux vector actually contains one more cell than it needs to
   
-  initialiseData(q, test, finalT);
+  initialiseData(gamma, q, test, finalT);
   
   // Do simulation
   double t = 0;
@@ -207,9 +332,9 @@ int main(void)
     // Implement this function, and then uncomment
     // computeDomainBoundaries(q)
     
-    double dt = computeTimestep(q, dx);
+    double dt = computeTimestep(gamma, cells, q, dx, CFL);
 
-    computeFluxes(q, flux, dx, dt);
+    computeFluxes(gamma, q, flux, dx, dt);
 
     // TODO - consider why these are the limits chosen
     for(int i = 1; i < cells + 1; ++i)
@@ -217,7 +342,7 @@ int main(void)
       for(int var = 0; var < 3; ++var)
       {
         q[i][var] = q[i][var] - (dt/dx) * (flux[i+1][var] - flux[i][var]);
-      }
+      } 
     }
 
     t += dt;
@@ -235,7 +360,7 @@ int main(void)
   for(unsigned int i=1 ; i < cells + 1 ; i++) {
 
     double x = (double(i) + 0.5) * dx;
-    std::array<double, 3> w = primitive(q[i]);
+    std::array<double, 3> w = primitive(q[i], gamma);
     
     rhoOutput << x << " " << w[0] << std::endl;
     velOutput << x << " " << w[1] << std::endl;
@@ -245,4 +370,3 @@ int main(void)
   
   return 0;
 }
-
