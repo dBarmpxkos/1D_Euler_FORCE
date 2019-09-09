@@ -18,7 +18,6 @@ double calc_E(double r, double u, double p, double gamma) {
     return p/(gamma-1) + (0.5 * r * u * u);
 }
 
-
 std::array<double, 3> array_addition(std::array<double, 3> firstArray, std::array<double, 3> secondArray)
 {
 
@@ -191,6 +190,22 @@ void initialiseData(double gamma, std::vector<std::array<double, 3> >& q, int te
   }
 }
 
+
+bool computeDomainBoundaries(std::vector<std::array<double, 3> >& q)
+{
+
+  q.front()[0] = q.at(front() + 1)[0];
+  q.front()[1] = q.at(front() + 1)[1];
+  q.front()[2] = q.at(front() + 1)[2];
+
+  q.back()[0] = q.at(back() - 1)[0];
+  q.back()[1] = q.at(back() - 1)[1];
+  q.back()[2] = q.at(back() - 1)[2];
+
+  return true;
+
+}
+
 // Compute flux-vector corresponding to given state vector
 // Equations for flux given on slide 11 of Euler notes
 std::array<double, 3> flux(std::array<double, 3>& q_i, double gamma)
@@ -328,12 +343,9 @@ int main(void)
   
   while( t < finalT )
   {
-    // TODO
-    // Implement this function, and then uncomment
-    // computeDomainBoundaries(q)
-    
-    double dt = computeTimestep(gamma, cells, q, dx, CFL);
 
+    computeDomainBoundaries(q);
+    double dt = computeTimestep(gamma, cells, q, dx, CFL);
     computeFluxes(gamma, q, flux, dx, dt);
 
     // TODO - consider why these are the limits chosen
